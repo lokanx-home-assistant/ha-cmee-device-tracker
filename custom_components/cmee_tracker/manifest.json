@@ -1,0 +1,9 @@
+{
+    "domain": "cmee",
+    "name": "cmee",
+    "documentation": "",
+    "dependencies": [],
+    "codeowners": [],
+    "requirements": [],
+    "homeassistant": "0.92.0"
+  } 
