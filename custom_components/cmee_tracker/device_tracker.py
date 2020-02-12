@@ -1,6 +1,6 @@
 
 import datetime
-from datetime import timedelta
+import pytz
 import logging
 import asyncio
 import voluptuous as vol
@@ -36,8 +36,8 @@ DEFAULT_CONF_DATA_URL = 'https://cmee.online/getActiveListOfPager.action'
 DEFAULT_CONF_LOGOUT_URL = 'https://cmee.online/logout.action'
 DEFAULT_CONF_NAME = 'cmee_tracker'
 
-"""SCAN_INTERVAL = timedelta(seconds=300) """
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+"""SCAN_INTERVAL = tdatetime.imedelta(seconds=300) """
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,   
@@ -129,16 +129,24 @@ class CmeeDeviceScanner(DeviceScanner):
                     "source_type": SOURCE_TYPE_GPS,
                     "icon": "mdi:watch",
                     "attributes": {
-                        "last_updated": dt_util.as_local(datetime.datetime.now()),
+                        "last_updated": dt_util.as_local(datetime.datetime.now(pytz.utc)),
                         "watch_id": row["mid"],
                         "watch_sid": row["sid"],
                         "watch_status": rowMetadata["inrn"] + " | " + rowMetadata["inrn1"],
-                        "watch_positioning_time": row["gt"],
-                        "watch_reception_time": row["rt"],
+                        "watch_positioning_time": self.parse_data_date(row["gt"], 16),
+                        "watch_reception_time": self.parse_data_date(row["rt"], 8),
                     },
                 }
                 self.devices.append(item)
 
+    def parse_data_date(self, dateStr, offset):
+        try:
+            tmpDatetime = datetime.datetime.strptime(dateStr, "%Y-%m-%d %H:%M:%S")
+            dt = tmpDatetime - datetime.timedelta(hours=offset)
+            return dt_util.as_local(dt)
+        except Exception as e:
+            _LOGGER.error("Failed fetch data", e)
+            return dateStr
 
 class CmeeDeviceScannerConfigData():
     def __init__(self, username, password, loginUrl, dataUrl, logoutUrl):
