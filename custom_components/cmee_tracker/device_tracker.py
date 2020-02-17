@@ -20,7 +20,7 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ DEFAULT_CONF_LOGOUT_URL = 'https://cmee.online/logout.action'
 DEFAULT_CONF_NAME = 'cmee_tracker'
 
 """SCAN_INTERVAL = tdatetime.imedelta(seconds=300) """
-DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=300)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,   
