@@ -20,7 +20,7 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 _LOGGER = logging.getLogger(__name__)
 
