@@ -15,12 +15,13 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
     SOURCE_TYPE_GPS,
+    CONF_SCAN_INTERVAL, 
 )
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,14 +31,16 @@ CONF_LOGIN_URL = 'login_url'
 CONF_DATA_URL = 'data_url'
 CONF_LOGOUT_URL = 'logout_url'
 CONF_NAME = 'name'
+CONF_FORCE_INTERVAL = 'force_interval'
 
 DEFAULT_CONF_LOGIN_URL = 'https://cmee.online/doLogin.action?userinfo.username={0}&userinfo.userpass={1}'
 DEFAULT_CONF_DATA_URL = 'https://cmee.online/getActiveListOfPager.action'
 DEFAULT_CONF_LOGOUT_URL = 'https://cmee.online/logout.action'
 DEFAULT_CONF_NAME = 'cmee_tracker'
+DEFAULT_CONF_FORCE_INTERVAL = False
 
-"""SCAN_INTERVAL = tdatetime.imedelta(seconds=300) """
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=300)
+MIN_SCAN_INTERVAL = datetime.timedelta(seconds=180)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,   
@@ -45,17 +48,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_CONF_NAME): cv.string,
     vol.Optional(CONF_LOGIN_URL, default=DEFAULT_CONF_LOGIN_URL): cv.string,
     vol.Optional(CONF_DATA_URL, default=DEFAULT_CONF_DATA_URL): cv.string,
-    vol.Optional(CONF_LOGOUT_URL, default=DEFAULT_CONF_LOGOUT_URL): cv.string
+    vol.Optional(CONF_LOGOUT_URL, default=DEFAULT_CONF_LOGOUT_URL): cv.string,
+    vol.Optional(CONF_FORCE_INTERVAL, default=DEFAULT_CONF_FORCE_INTERVAL): cv.boolean
 })
 
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     _LOGGER.debug("Scanner setup started")
-    interval = DEFAULT_SCAN_INTERVAL
+    interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     loginUrl = config.get(CONF_LOGIN_URL)
     dataUrl = config.get(CONF_DATA_URL)
     logoutUrl = config.get(CONF_LOGOUT_URL)
+    forceInterval = config.get(CONF_FORCE_INTERVAL)
     name = config.get(CONF_NAME)
 
     configData = CmeeDeviceScannerConfigData(
@@ -65,7 +70,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         dataUrl,
         logoutUrl)
     scanner = CmeeDeviceScanner(hass, async_see, configData)
-    await scanner.async_start(hass, interval)
+    await scanner.async_start(hass, interval, forceInterval)
     _LOGGER.debug("Scanner initialized")
     return True
 
@@ -78,14 +83,15 @@ class CmeeDeviceScanner(DeviceScanner):
         self.async_see = async_see
         self.devices = None
 
-    async def async_start(self, hass, interval):
+    async def async_start(self, hass, interval, force):
         """Perform a first update and start polling at the given interval."""
         await self.async_update_info()
-        interval = max(interval, DEFAULT_SCAN_INTERVAL)
+        if force is False:
+            interval = max(interval, MIN_SCAN_INTERVAL)
+        _LOGGER.debug("Starting scanner: interval=" + str(interval))
         async_track_time_interval(hass, self.async_update_info, interval)
 
     async def async_see_sensor(self, device):
-        mac = "00:00:00:00:00:01"
         _LOGGER.debug("See device called")
         result = await self.async_see(**device)
         return result
