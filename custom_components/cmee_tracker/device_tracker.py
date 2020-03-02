@@ -21,7 +21,7 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,12 +138,38 @@ class CmeeDeviceScanner(DeviceScanner):
                         "last_updated": dt_util.as_local(datetime.datetime.now(pytz.utc)),
                         "watch_id": row["mid"],
                         "watch_sid": row["sid"],
-                        "watch_status": rowMetadata["inrn"] + " | " + rowMetadata["inrn1"],
+                        "watch_status": self.parse_status(row),
+                        "watch_location": self.parse_location(rowMetadata),
                         "watch_positioning_time": self.parse_data_date(row["gt"], 16),
                         "watch_reception_time": self.parse_data_date(row["rt"], 8),
                     },
                 }
                 self.devices.append(item)
+
+    def parse_status(self, row):
+        try:
+            if "tt" in row:
+                if row["tt"] is 0:
+                    return "Offline"
+                elif row["tt"] is 1:
+                    return "Online"
+                else:
+                    return "Unknown"                
+            else:
+                return "Unknown"
+        except Exception as e:
+            return "Unknown"
+
+    def parse_location(self, rowMetadata):
+        try:
+            if "inrn" in rowMetadata and "inrn1" in rowMetadata:
+                return rowMetadata["inrn"] + " | " + rowMetadata["inrn1"]
+            elif "outrn" in rowMetadata and "outrn1" in rowMetadata:
+                return rowMetadata["outrn"] + " | " + rowMetadata["outrn1"]
+            else:
+                return "Unknown"
+        except Exception as e:
+            return "Unknown"
 
     def parse_data_date(self, dateStr, offset):
         try:
