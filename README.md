@@ -17,3 +17,10 @@ Since fetching data is draining battery on the CMEE device a minimum value of 18
       username: <username>
       password: <password>
       interval_seconds: 180
+
+Sometimes the (Let's Encrypt) SSL certificate expires so you could also disabble SSL certificate verification like this.
+
+    - platform: cmee
+      username: <username>
+      password: <password>
+      verify_ssl: False
