@@ -20,6 +20,7 @@ class CmeeDeviceDataService():
         _LOGGER.debug("Requesting CMEE Data")
         try:
             with requests.Session() as session:
+                session.verify = self.configData._verifySSL
                 usermd5 = self.perform_login(session)
                 self.perform_fetch_alarm_data(session, usermd5)
                 self.perform_fetch_device_data(session, usermd5)
