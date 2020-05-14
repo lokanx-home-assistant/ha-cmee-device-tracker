@@ -19,7 +19,7 @@ import homeassistant.util.dt as dt_util
 from .config_data import CmeeDeviceScannerConfigData
 from .device_scanner import CmeeDeviceScanner
 
-__version__ = '0.0.9'
+__version__ = '0.0.10'
 
 _LOGGER = logging.getLogger(__name__)
 

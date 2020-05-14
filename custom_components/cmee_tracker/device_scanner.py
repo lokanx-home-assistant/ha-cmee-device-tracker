@@ -40,7 +40,7 @@ class CmeeDeviceScanner(DeviceScanner):
         return result
 
     async def async_update_info(self, now=None):
-        await self.dataService.fetch_data()
+        await self.hass.async_add_executor_job(self.dataService.fetch_data)
         if self.dataService.devices is not None:
             sensors = []
             for device in self.dataService.devices:

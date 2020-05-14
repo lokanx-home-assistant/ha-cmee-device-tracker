@@ -21,15 +21,15 @@ class CmeeDeviceDataService():
         try:
             with requests.Session() as session:
                 session.verify = self.configData._verifySSL
-                usermd5 = self.perform_login(session)
-                self.perform_fetch_alarm_data(session, usermd5)
-                self.perform_fetch_device_data(session, usermd5)
-                self.perform_logout(session)
+                usermd5 = await self.perform_login(session)
+                await self.perform_fetch_alarm_data(session, usermd5)
+                await self.perform_fetch_device_data(session, usermd5)
+                await self.perform_logout(session)
         except Exception as e:
             _LOGGER.error("Failed fetch data", e)
 
-    def perform_login(self, session):
-        loginUrl = self.configData._loginUrl.format(self.configData._username, self.configData._password)
+    async def perform_login(self, session):
+        loginUrl =  self.configData._loginUrl.format(self.configData._username, self.configData._password)
         #_LOGGER.debug("CMEE Login URL: " + loginUrl)
         loginRequest = session.get(loginUrl) 
         #_LOGGER.debug("CMEE Login Data retrieved: " + loginRequest.text)
@@ -39,7 +39,7 @@ class CmeeDeviceDataService():
 
         return ""
 
-    def perform_fetch_device_data(self, session, usermd5):
+    async def perform_fetch_device_data(self, session, usermd5):
         deviceDataUrl = self.configData._deviceDataUrl.format(usermd5)
         #_LOGGER.debug("CMEE Device Data URL: " + deviceDataUrl)
         deviceDataRequest = session.get(deviceDataUrl)
@@ -48,7 +48,7 @@ class CmeeDeviceDataService():
             jsonData = json.loads(deviceDataRequest.text)
             self.parse_data(jsonData)
 
-    def perform_fetch_alarm_data(self, session, usermd5):
+    async def perform_fetch_alarm_data(self, session, usermd5):
         ts = datetime.datetime.now(pytz.utc)
         dt = ts + datetime.timedelta(hours=6)
         st = dt_util.as_local(dt)
@@ -58,8 +58,8 @@ class CmeeDeviceDataService():
         alarmDataRequest = session.get(alarmDataUrl)
         _LOGGER.debug("CMEE Alarm Data retrieved: " + alarmDataRequest.text)
 
-    def perform_logout(self, session):
-        logoutUrl = self.configData._logoutUrl
+    async def perform_logout(self, session):
+        logoutUrl =  self.configData._logoutUrl
         _LOGGER.debug("CMEE Logout URL: " + logoutUrl)
         logoutRequest = session.get(logoutUrl)
     
